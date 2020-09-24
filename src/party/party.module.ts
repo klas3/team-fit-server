@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import PartyController from './party.controller';
-import User from '../entity/User';
 import PartyService from './party.service';
 import Waypoint from '../entity/Waypoint';
 import UserModule from '../user/user.module';
+import Party from '../entity/Party';
+import WaypointService from './waypoint.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Waypoint]), UserModule],
-  providers: [PartyService],
+  imports: [TypeOrmModule.forFeature([Waypoint, Party]), UserModule],
+  providers: [PartyService, WaypointService],
   controllers: [PartyController],
-  exports: [PartyService],
+  exports: [PartyService, WaypointService],
 })
 class PartyModule {}
 

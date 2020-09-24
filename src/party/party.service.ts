@@ -10,8 +10,6 @@ class PartyService {
   constructor(
     @InjectRepository(Party)
     private readonly partyRepository: Repository<Party>,
-    @InjectRepository(Waypoint)
-    private readonly waypointRepository: Repository<Waypoint>,
   ) {}
 
   async create(creator: User): Promise<Party> {
@@ -26,20 +24,8 @@ class PartyService {
     await this.partyRepository.update(party.id, party);
   }
 
-  async createWaypoint(waypoint: Waypoint): Promise<Waypoint> {
-    return this.waypointRepository.save(waypoint);
-  }
-
-  async getWaypoints(partyId: string): Promise<Waypoint[]> {
-    return this.waypointRepository.find({ partyId });
-  }
-
-  async deleteWaypoints(partyId: string): Promise<void> {
-    await this.waypointRepository.delete({ partyId });
-  }
-
-  async delete(partyId: string): Promise<void> {
-    await this.partyRepository.delete(partyId);
+  async delete(id: string): Promise<void> {
+    await this.partyRepository.delete(id);
   }
 }
 
