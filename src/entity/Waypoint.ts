@@ -13,16 +13,16 @@ class Waypoint {
   partyId?: string;
 
   @ManyToOne(
-    (type) => Party,
+    () => Party,
     (party) => party.waypoints,
   )
   party?: Party;
 
-  @Column()
-  latitude!: string;
+  @Column('float')
+  latitude!: number;
 
-  @Column()
-  longitude!: string;
+  @Column('float')
+  longitude!: number;
 }
 
 export default Waypoint;

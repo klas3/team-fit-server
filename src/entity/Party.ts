@@ -2,34 +2,34 @@
 import {
   Column, Entity, OneToMany, PrimaryGeneratedColumn,
 } from 'typeorm';
-import Coordinate from './Waypoint';
 import User from './User';
+import Waypoint from './Waypoint';
 
 @Entity()
 class Party {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column('float')
   startPointLatitude?: number;
 
-  @Column()
+  @Column('float')
   startPointLongitude?: number;
 
-  @Column()
+  @Column('float')
   endPointLatitude?: number;
 
-  @Column()
+  @Column('float')
   endPointLongitude?: number;
 
   @OneToMany(
-    (type) => Coordinate,
-    (coordinate) => coordinate.party,
+    () => Waypoint,
+    (waypoint) => waypoint.party,
   )
-  waypoints?: Coordinate[];
+  waypoints?: Waypoint[];
 
   @OneToMany(
-    (type) => User,
+    () => User,
     (user) => user.party,
   )
   users!: User[];

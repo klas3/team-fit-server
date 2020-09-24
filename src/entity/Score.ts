@@ -13,7 +13,7 @@ class Score {
   userId!: string;
 
   @ManyToOne(
-    (type) => User,
+    () => User,
     (user) => user.scores,
   )
   user!: User;
@@ -21,7 +21,7 @@ class Score {
   @Column()
   date!: Date;
 
-  @Column()
+  @Column('float')
   mileage!: number;
 }
 

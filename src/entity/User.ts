@@ -30,10 +30,10 @@ class User {
   @Column()
   lastResetCodeCreationTime?: Date;
 
-  @Column()
+  @Column('float')
   currentLatitude?: number;
 
-  @Column()
+  @Column('float')
   currentLongitude?: number;
 
   @Column()
@@ -50,12 +50,6 @@ class User {
     (score) => score.userId,
   )
   scores!: Score[];
-
-  // @OneToMany(
-  //   (type) => Friendship,
-  //   (friendship) => friendship.
-  // )
-  // friendships!: Friendship[];
 
   async changePassword(newPassword: string): Promise<void> {
     this.password = await bcrypt.hash(newPassword, 10);

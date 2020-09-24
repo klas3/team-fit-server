@@ -1,5 +1,6 @@
 // prettier-ignore
 import {
+  Column,
   Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn,
 } from 'typeorm';
 import User from './User';
@@ -9,11 +10,14 @@ class Friendship {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToMany((type) => User)
+  @Column()
+  isAccepted!: boolean;
+
+  @ManyToMany(() => User)
   @JoinTable()
   firstUser!: User;
 
-  @ManyToMany((type) => User)
+  @ManyToMany(() => User)
   @JoinTable()
   secondUser!: User;
 }
