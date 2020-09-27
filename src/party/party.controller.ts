@@ -1,6 +1,6 @@
 // prettier-ignore
 import {
-  Body, Controller, ForbiddenException, NotFoundException, Post,
+  Body, Controller, ForbiddenException, Get, NotFoundException, Post,
 } from '@nestjs/common';
 import { Authorize, GetUser } from 'src/auth/auth.decorators';
 import Party from 'src/entity/Party';
@@ -8,17 +8,19 @@ import Waypoint from 'src/entity/Waypoint';
 import UserService from 'src/user/user.service';
 import User from '../entity/User';
 import PartyService from './party.service';
+import WaypointService from './waypoint.service';
 
 @Authorize()
 @Controller('party')
 class PartyController {
   constructor(
+    private readonly waypointService: WaypointService,
     private readonly partyService: PartyService,
     private readonly userService: UserService,
   ) {}
 
   @Post('join')
-  async join(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
+  public async join(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
     const newParty = await this.tryFindParty(partyId);
     const partyUser = await this.userService.getById(user.id);
     if (!partyUser) {
@@ -39,7 +41,7 @@ class PartyController {
   }
 
   @Post('leave')
-  async leave(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
+  public async leave(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
     const party = await this.tryFindParty(partyId);
     if (party.users.length === 1) {
       throw new ForbiddenException('You can not delete this party');
@@ -54,7 +56,7 @@ class PartyController {
   }
 
   @Post('setRoute')
-  async setRoute(
+  public async setRoute(
     @Body('partyId') partyId: string,
     @Body('startPointLatitude') startPointLatitude: number,
     @Body('startPointLongitude') startPointLongitude: number,
@@ -66,11 +68,9 @@ class PartyController {
     if (!party) {
       throw new NotFoundException('This party does not exist');
     }
-    await this.partyService.deleteWaypoints(partyId);
+    await this.waypointService.deleteByPartyId(partyId);
     // prettier-ignore
-    const createdWaypoints = waypoints.map(
-      (waypoint) => this.partyService.createWaypoint(waypoint),
-    );
+    const createdWaypoints = waypoints.map((waypoint) => this.waypointService.create(waypoint));
     await Promise.all(createdWaypoints);
     party.startPointLatitude = startPointLatitude;
     party.startPointLongitude = startPointLongitude;
