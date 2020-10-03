@@ -30,7 +30,7 @@ class AuthService {
   async login(user: User): Promise<string> {
     const payload = {
       id: user.id,
-      login: user.username,
+      login: user.login,
       password: user.password,
     };
     return this.jwtService.sign(payload);
@@ -45,12 +45,7 @@ class AuthService {
     const resetCode = this.generateResetCode();
     user.setResetCode(resetCode);
     await this.userService.update(user);
-    await this.emailService.sendEmailAsync(
-      user.email,
-      'Відновлення паролю',
-      user.username,
-      resetCode,
-    );
+    await this.emailService.sendEmailAsync(user.email, 'Відновлення паролю', user.login, resetCode);
   }
 
   async resetPassword(newPassword: string, user: User): Promise<void> {

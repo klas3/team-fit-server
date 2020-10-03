@@ -22,8 +22,8 @@ class UserService {
     return this.userRepository.findOne({ id });
   }
 
-  async isUsernameUnique(username: string): Promise<boolean> {
-    return (await this.userRepository.findOne({ username })) === undefined;
+  async isloginUnique(login: string): Promise<boolean> {
+    return (await this.userRepository.findOne({ login })) === undefined;
   }
 
   async isEmailUnique(email: string): Promise<boolean> {
@@ -35,8 +35,8 @@ class UserService {
     return email;
   }
 
-  async getByUsername(username: string): Promise<User | undefined> {
-    return this.userRepository.findOne({ username });
+  async getBylogin(login: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ login });
   }
 
   async getByEmail(email: string): Promise<User | undefined> {

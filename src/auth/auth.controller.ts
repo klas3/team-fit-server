@@ -23,13 +23,13 @@ class AuthController {
 
   @Post('login')
   async login(
-    @Body('username') username: string,
+    @Body('login') login: string,
     @Body('password') password: string,
   ): Promise<{ authToken: string }> {
-    if (!username || !password) {
+    if (!login || !password) {
       throw new BadRequestException();
     }
-    const user = await this.userService.getByUsername(username);
+    const user = await this.userService.getBylogin(login);
     if (!user || !(await user.comparePassword(password))) {
       throw new UnauthorizedException('Неправильний логін або пароль');
     }
@@ -37,12 +37,18 @@ class AuthController {
   }
 
   @Post('register')
-  async register(@Body() incomingUser: User): Promise<void> {
-    const user = incomingUser;
-    await this.verifyRegistration(user);
-    const registeredUser = await this.authService.register(user);
-    await this.partyService.create(registeredUser);
-    // eslint-disable-next-line
+  async register(@Body() incommingUser: User): Promise<void> {
+    const user = incommingUser;
+    if (!(await this.userService.isloginUnique(user.login))) {
+      throw new BadRequestException(`Логін ${user.login} вже зайнятий`);
+    }
+    if (!(await this.userService.isEmailUnique(user.email))) {
+      throw new BadRequestException('Ця пошта вже зареєстрована');
+    }
+    const party = await this.partyService.create();
+    user.partyId = party.id;
+    await this.authService.register(user);
+    // eslint-disable-next-line no-useless-return
     return;
   }
 
@@ -116,15 +122,6 @@ class AuthController {
       throw new ForbiddenException('Ви ввели невірний код');
     }
     return this.authService.resetPassword(newPassword, user);
-  }
-
-  private async verifyRegistration(user: User): Promise<void> {
-    if (!(await this.userService.isUsernameUnique(user.username))) {
-      throw new BadRequestException(`Логін ${user.username} вже зайнятий`);
-    }
-    if (!(await this.userService.isEmailUnique(user.email))) {
-      throw new BadRequestException('Ця пошта вже зареєстрована');
-    }
   }
 }
 

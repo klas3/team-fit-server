@@ -7,7 +7,7 @@ import User from 'src/entity/User';
 class UserController {
   @Get('info')
   async getInfo(@GetUser() user: User): Promise<{ email: string; login: string }> {
-    return { email: user.email, login: user.username };
+    return { email: user.email, login: user.login };
   }
 
   @Get('id')

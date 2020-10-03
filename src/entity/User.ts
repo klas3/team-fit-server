@@ -14,7 +14,7 @@ class User {
 
   @IsNotEmpty()
   @Column()
-  username!: string;
+  login!: string;
 
   @IsNotEmpty()
   @Column()
