@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Party from 'src/entity/Party';
-import Waypoint from 'src/entity/Waypoint';
 import { Repository } from 'typeorm';
 import User from '../entity/User';
 
@@ -12,12 +11,13 @@ class PartyService {
     private readonly partyRepository: Repository<Party>,
   ) {}
 
-  async create(creator: User): Promise<Party> {
-    return this.partyRepository.save({ users: [creator] });
+  async create(creator?: User): Promise<Party> {
+    const party = !creator ? {} : { users: [creator] };
+    return this.partyRepository.save(party);
   }
 
   async getById(id: string): Promise<Party | undefined> {
-    return this.partyRepository.findOne({ id });
+    return this.partyRepository.findOne({ id }, { relations: ['users'] });
   }
 
   async update(party: Party): Promise<void> {
