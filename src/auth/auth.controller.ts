@@ -90,7 +90,7 @@ class AuthController {
       throw new NotFoundException();
     }
     if (user.resetCode !== code) {
-      throw new ForbiddenException('Wrong reset code');
+      throw new ForbiddenException("The reset code you've provided was wrong");
     }
     if (
       // prettier-ignore
@@ -119,7 +119,7 @@ class AuthController {
       throw new NotFoundException();
     }
     if (user.resetCode !== code) {
-      throw new ForbiddenException('Wrong reset code');
+      throw new ForbiddenException("The reset code you've provided was wrong");
     }
     return this.authService.resetPassword(newPassword, user);
   }
