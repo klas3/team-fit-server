@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import User from 'src/entity/User';
 import { Repository } from 'typeorm';
 import Friendship from '../entity/Friendship';
 
@@ -10,7 +11,7 @@ class FriendshipService {
     private readonly friendshipRepository: Repository<Friendship>,
   ) {}
 
-  async create(friendship: Friendship): Promise<Friendship> {
+  create(friendship: Friendship): Promise<Friendship> {
     return this.friendshipRepository.save(friendship);
   }
 
@@ -18,10 +19,21 @@ class FriendshipService {
     await this.friendshipRepository.update(id, { isAccepted: true });
   }
 
-  // TODO Test that on searching
-  async getByUserId(userId: string): Promise<Friendship[]> {
+  getById(id: string): Promise<Friendship | undefined> {
+    return this.friendshipRepository.findOne(id, { relations: ['initiator', 'receiver'] });
+  }
+
+  getByParticipants(initiatorId: string, receiverId: string): Promise<Friendship | undefined> {
+    return this.friendshipRepository.findOne({ initiatorId, receiverId });
+  }
+
+  getFriendsListByUserId(userId: string): Promise<Friendship[]> {
     return this.friendshipRepository.find({
-      where: [{ firstUser: userId }, { secondUser: userId }],
+      where: [
+        { initiatorId: userId, isAccepted: true },
+        { receiverId: userId, isAccepted: true },
+      ],
+      relations: ['initiator', 'receiver'],
     });
   }
 

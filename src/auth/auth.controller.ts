@@ -29,7 +29,7 @@ class AuthController {
     if (!login || !password) {
       throw new BadRequestException();
     }
-    const user = await this.userService.getBylogin(login);
+    const user = await this.userService.getByLogin(login);
     if (!user || !(await user.comparePassword(password))) {
       throw new UnauthorizedException("The credentials you've provided was incorrect");
     }

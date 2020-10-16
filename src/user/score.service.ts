@@ -17,10 +17,6 @@ class ScoreService {
   async getByUserId(userId: string): Promise<Score[]> {
     return this.scoreRepository.find({ userId });
   }
-
-  async update(score: Score): Promise<void> {
-    await this.scoreRepository.update(score.id, score);
-  }
 }
 
 export default ScoreService;

@@ -14,7 +14,7 @@ class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any, done: VerifiedCallback) {
-    const user = await this.userService.getBylogin(payload.login);
+    const user = await this.userService.getByLogin(payload.login);
     if (!user || !user.comparePassword(payload.password)) {
       throw new UnauthorizedException();
     }

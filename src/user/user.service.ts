@@ -35,7 +35,7 @@ class UserService {
     return email;
   }
 
-  async getBylogin(login: string): Promise<User | undefined> {
+  async getByLogin(login: string): Promise<User | undefined> {
     return this.userRepository.findOne({ login });
   }
 

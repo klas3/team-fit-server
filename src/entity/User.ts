@@ -40,13 +40,13 @@ class User {
   partyId!: string;
 
   @ManyToOne(
-    (type) => Party,
+    () => Party,
     (party) => party.users,
   )
   party!: Party;
 
   @OneToMany(
-    (type) => Score,
+    () => Score,
     (score) => score.userId,
   )
   scores!: Score[];
