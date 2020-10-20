@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import Waypoint from 'src/entity/Waypoint';
 import { Repository } from 'typeorm';
+import Waypoint from '../entity/Waypoint';
 
 @Injectable()
 class WaypointService {

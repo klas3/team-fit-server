@@ -6,9 +6,10 @@ import Waypoint from '../entity/Waypoint';
 import UserModule from '../user/user.module';
 import Party from '../entity/Party';
 import WaypointService from './waypoint.service';
+import GatewayModule from '../gateway/gateway.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Waypoint, Party]), UserModule],
+  imports: [TypeOrmModule.forFeature([Waypoint, Party]), UserModule, GatewayModule],
   providers: [PartyService, WaypointService],
   controllers: [PartyController],
   exports: [PartyService, WaypointService],

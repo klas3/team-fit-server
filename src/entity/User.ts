@@ -1,11 +1,12 @@
 // prettier-ignore
 import {
-  Entity, Column, PrimaryGeneratedColumn, OneToOne, OneToMany, ManyToOne,
+  Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { IsNotEmpty } from 'class-validator';
 import Score from './Score';
 import Party from './Party';
+import MarkerColors from './MarkerColor';
 
 @Entity()
 class User {
@@ -51,11 +52,14 @@ class User {
   )
   scores!: Score[];
 
+  @Column()
+  markerColor!: MarkerColors;
+
   async changePassword(newPassword: string): Promise<void> {
     this.password = await bcrypt.hash(newPassword, 10);
   }
 
-  async comparePassword(password: string): Promise<boolean> {
+  comparePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }
 

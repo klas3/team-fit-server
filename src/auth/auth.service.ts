@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import UserService from '../user/user.service';
 import User from '../entity/User';
 import EmailService from '../email/email.service';
+import MarkerColor from '../entity/MarkerColor';
 
 @Injectable()
 class AuthService {
@@ -23,6 +24,7 @@ class AuthService {
 
   async register(user: User): Promise<User> {
     const newUser = user;
+    newUser.markerColor = MarkerColor.black;
     newUser.password = await bcrypt.hash(newUser.password, this.hashRounds);
     return this.userService.create(newUser);
   }

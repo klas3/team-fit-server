@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import User from 'src/entity/User';
 import { Repository } from 'typeorm';
 import Friendship from '../entity/Friendship';
 
@@ -29,10 +28,7 @@ class FriendshipService {
 
   getFriendsListByUserId(userId: string): Promise<Friendship[]> {
     return this.friendshipRepository.find({
-      where: [
-        { initiatorId: userId, isAccepted: true },
-        { receiverId: userId, isAccepted: true },
-      ],
+      where: [{ initiatorId: userId }, { receiverId: userId }],
       relations: ['initiator', 'receiver'],
     });
   }

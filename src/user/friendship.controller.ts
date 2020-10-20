@@ -2,7 +2,7 @@
 import {
   BadRequestException, Body, Controller, ForbiddenException, Get, NotFoundException, Post,
 } from '@nestjs/common';
-import Friendship from 'src/entity/Friendship';
+import Friendship from '../entity/Friendship';
 import { Authorize, GetUser } from '../auth/auth.decorators';
 import User from '../entity/User';
 import FriendshipService from './friendship.service';
@@ -25,9 +25,11 @@ class FriendshipController {
       safeFriendship.initiator = new User();
       safeFriendship.initiator.id = initiator.id;
       safeFriendship.initiator.login = initiator.login;
+      safeFriendship.initiator.markerColor = initiator.markerColor;
       safeFriendship.receiver = new User();
       safeFriendship.receiver.id = receiver.id;
       safeFriendship.receiver.login = receiver.login;
+      safeFriendship.receiver.markerColor = receiver.markerColor;
       return safeFriendship;
     });
     return safeFriendshipsList;

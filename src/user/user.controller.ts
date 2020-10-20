@@ -1,21 +1,52 @@
 // prettier-ignore
 import {
   BadRequestException,
-  Body, Controller, Get, Post,
+  Body, Controller, Get, NotFoundException, Post,
 } from '@nestjs/common';
-import { Authorize, GetUser } from 'src/auth/auth.decorators';
-import Score from 'src/entity/Score';
-import User from 'src/entity/User';
+import { Authorize, GetUser } from '../auth/auth.decorators';
+import MarkerColor from '../entity/MarkerColor';
+import Score from '../entity/Score';
+import User from '../entity/User';
 import ScoreService from './score.service';
+import UserService from './user.service';
 
 @Authorize()
 @Controller('user')
 class UserController {
-  constructor(private readonly scoreService: ScoreService) {}
+  constructor(
+    private readonly scoreService: ScoreService,
+    private readonly userService: UserService,
+  ) {}
 
   @Get('info')
-  getInfo(@GetUser() user: User): { email: string; login: string } {
-    return { email: user.email, login: user.login };
+  async getInfo(
+    @GetUser() requestUser: User,
+  ): Promise<{ id: string; email: string; login: string; markerColor: MarkerColor }> {
+    const user = await this.userService.getById(requestUser.id);
+    if (!user) {
+      throw new NotFoundException('User is not found');
+    }
+    // prettier-ignore
+    const {
+      email, id, login, markerColor,
+    } = user;
+    // prettier-ignore
+    return {
+      id, email, login, markerColor,
+    };
+  }
+
+  @Post('setMarkerColor')
+  async setMarkerColor(
+    @GetUser() requestUser: User,
+    @Body('markerColor') markerColor: MarkerColor,
+  ): Promise<void> {
+    const user = await this.userService.getById(requestUser.id);
+    if (!user) {
+      throw new NotFoundException('User is not found');
+    }
+    user.markerColor = markerColor;
+    await this.userService.update(user);
   }
 
   @Get('getScores')

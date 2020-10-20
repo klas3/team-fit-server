@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import Score from 'src/entity/Score';
 import { Repository } from 'typeorm';
+import Score from '../entity/Score';
 
 @Injectable()
 class ScoreService {

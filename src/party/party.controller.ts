@@ -2,10 +2,11 @@
 import {
   Body, Controller, ForbiddenException, Get, NotFoundException, Post,
 } from '@nestjs/common';
-import { Authorize, GetUser } from 'src/auth/auth.decorators';
-import Party from 'src/entity/Party';
-import Waypoint from 'src/entity/Waypoint';
-import UserService from 'src/user/user.service';
+import { Authorize, GetUser } from '../auth/auth.decorators';
+import Party from '../entity/Party';
+import Waypoint from '../entity/Waypoint';
+import AppGateway from '../gateway/app.gateway';
+import UserService from '../user/user.service';
 import User from '../entity/User';
 import PartyService from './party.service';
 import WaypointService from './waypoint.service';
@@ -13,46 +14,82 @@ import WaypointService from './waypoint.service';
 @Authorize()
 @Controller('party')
 class PartyController {
+  private readonly maxPartyMembersCount = 10;
+
   constructor(
     private readonly waypointService: WaypointService,
     private readonly partyService: PartyService,
     private readonly userService: UserService,
+    private readonly appGateway: AppGateway,
   ) {}
+
+  @Get('info')
+  public async getInfo(@GetUser() requestUser: User): Promise<Party> {
+    const user = await this.userService.getById(requestUser.id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    let party = await this.partyService.getById(user.partyId);
+    if (!party) {
+      party = await this.partyService.create();
+      user.partyId = party.id;
+      await this.userService.update(user);
+    }
+    party.users = party.users.map((partyUser) => {
+      // prettier-ignore
+      const {
+        id, login, partyId, currentLatitude, currentLongitude, markerColor,
+      } = partyUser;
+      const safeUser = new User();
+      safeUser.id = id;
+      safeUser.login = login;
+      safeUser.partyId = partyId;
+      safeUser.currentLatitude = currentLatitude;
+      safeUser.currentLongitude = currentLongitude;
+      safeUser.markerColor = markerColor;
+      return safeUser;
+    });
+    return party;
+  }
 
   @Post('join')
   public async join(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
     const newParty = await this.tryFindParty(partyId);
+    if (newParty.users.length === this.maxPartyMembersCount) {
+      throw new ForbiddenException('This party if full');
+    }
     const partyUser = await this.userService.getById(user.id);
     if (!partyUser) {
-      throw new NotFoundException();
+      throw new NotFoundException('User is not found');
+    }
+    if (partyUser.partyId === partyId) {
+      throw new ForbiddenException('You are already in this party');
     }
     const oldParty = await this.tryFindParty(partyUser.partyId);
+    partyUser.partyId = partyId;
+    await this.userService.update(partyUser);
+    this.appGateway.leaveParty(partyId, user.id);
+    this.appGateway.emitUserLeave(partyId, user.id);
     if (oldParty.users.length === 1) {
       await this.partyService.delete(partyUser.partyId);
-    } else {
-      const oldPartyUserIndex = oldParty.users.findIndex(
-        (oldPartyUser) => oldPartyUser.id === partyUser.id,
-      );
-      oldParty.users.slice(oldPartyUserIndex, 1);
-      await this.partyService.update(oldParty);
     }
-    newParty.users.push(partyUser);
-    await this.partyService.update(newParty);
+    this.appGateway.joinParty(partyId, user.id);
+    this.appGateway.emitUserJoin(partyId, partyUser);
   }
 
   @Post('leave')
-  public async leave(@GetUser() user: User, @Body('partyId') partyId: string): Promise<void> {
-    const party = await this.tryFindParty(partyId);
+  public async leave(@GetUser() requestUser: User): Promise<void> {
+    const user = await this.userService.getById(requestUser.id);
+    if (!user) {
+      throw new NotFoundException('User is not found');
+    }
+    const party = await this.tryFindParty(user.partyId);
     if (party.users.length === 1) {
-      throw new ForbiddenException('You can not delete this party');
+      throw new ForbiddenException('You can not leave this party');
     }
-    const userPartyIndex = party.users.findIndex((member) => member.id === user.id);
-    if (userPartyIndex === -1) {
-      throw new NotFoundException('You are not member of this party');
-    }
-    party.users.splice(userPartyIndex, 1);
-    await this.partyService.update(party);
     await this.partyService.create(user);
+    this.appGateway.leaveParty(user.partyId, user.id);
+    this.appGateway.emitUserLeave(user.partyId, user.id);
   }
 
   @Post('setRoute')
