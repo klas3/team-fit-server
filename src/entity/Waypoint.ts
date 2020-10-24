@@ -10,13 +10,13 @@ class Waypoint {
   id!: string;
 
   @Column()
-  partyId?: string;
+  partyId!: string;
 
   @ManyToOne(
     () => Party,
     (party) => party.waypoints,
   )
-  party?: Party;
+  party!: Party;
 
   @Column('float')
   latitude!: number;

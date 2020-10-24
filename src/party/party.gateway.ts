@@ -5,15 +5,18 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import UserService from 'src/user/user.service';
 import Party from '../entity/Party';
 import User from '../entity/User';
 
 @WebSocketGateway()
-class AppGateway implements OnGatewayConnection {
+class PartyGateway implements OnGatewayConnection {
   @WebSocketServer()
   private readonly server!: Server;
 
   private readonly clients: Map<string, Socket> = new Map<string, Socket>();
+
+  constructor(private readonly userService: UserService) {}
 
   handleConnection(client: Socket): void {
     client.emit('connection');
@@ -33,8 +36,29 @@ class AppGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('addClient')
-  addClient(client: Socket, userId: string) {
+  addClient(client: Socket, clientInfo: { userId: string; partyId: string }) {
+    const { partyId, userId } = clientInfo;
+    client.join(partyId);
     this.clients.set(userId, client);
+  }
+
+  @SubscribeMessage('changeCurrentPosition')
+  async emitNewUserLocation(
+    client: Socket,
+    postionInfo: { partyId: string; clientUser: User },
+  ): Promise<void> {
+    const { partyId, clientUser } = postionInfo;
+    if (!partyId || !clientUser) {
+      return;
+    }
+    client.to(partyId).emit('userPositionChanged', clientUser);
+    const user = await this.userService.getById(clientUser.id);
+    if (!user) {
+      return;
+    }
+    user.currentLatitude = clientUser.currentLatitude;
+    user.currentLongitude = clientUser.currentLongitude;
+    await this.userService.update(user);
   }
 
   joinParty(partyId: string, userId: string): void {
@@ -64,10 +88,6 @@ class AppGateway implements OnGatewayConnection {
   emitNewRoute(partyId: string, party: Party): void {
     this.server.to(partyId).emit('routeChanged', party);
   }
-
-  emitNewUserLocation(partyId: string, user: User): void {
-    this.server.to(partyId).emit('userPositionChanged', user);
-  }
 }
 
-export default AppGateway;
+export default PartyGateway;

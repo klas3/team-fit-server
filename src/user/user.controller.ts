@@ -19,20 +19,18 @@ class UserController {
   ) {}
 
   @Get('info')
-  async getInfo(
-    @GetUser() requestUser: User,
-  ): Promise<{ id: string; email: string; login: string; markerColor: MarkerColor }> {
+  async getInfo(@GetUser() requestUser: User): Promise<Partial<User>> {
     const user = await this.userService.getById(requestUser.id);
     if (!user) {
       throw new NotFoundException('User is not found');
     }
     // prettier-ignore
     const {
-      email, id, login, markerColor,
+      email, id, login, markerColor, partyId,
     } = user;
     // prettier-ignore
     return {
-      id, email, login, markerColor,
+      id, email, login, markerColor, partyId,
     };
   }
 
@@ -50,14 +48,14 @@ class UserController {
   }
 
   @Get('getScores')
-  getScores(@GetUser() user: User): Promise<Score[]> {
+  async getScores(@GetUser() user: User): Promise<Score[]> {
     return this.scoreService.getByUserId(user.id);
   }
 
   @Post('addScore')
   async addScore(@GetUser() user: User, @Body('mileage') mileage: number): Promise<void> {
     if (!mileage) {
-      throw new BadRequestException('Mileage is not specified');
+      throw new BadRequestException('Mileage is too small for saving');
     }
     const score = new Score();
     score.userId = user.id;

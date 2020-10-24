@@ -10,7 +10,7 @@ class FriendshipService {
     private readonly friendshipRepository: Repository<Friendship>,
   ) {}
 
-  create(friendship: Friendship): Promise<Friendship> {
+  async create(friendship: Friendship): Promise<Friendship> {
     return this.friendshipRepository.save(friendship);
   }
 
@@ -18,15 +18,18 @@ class FriendshipService {
     await this.friendshipRepository.update(id, { isAccepted: true });
   }
 
-  getById(id: string): Promise<Friendship | undefined> {
+  async getById(id: string): Promise<Friendship | undefined> {
     return this.friendshipRepository.findOne(id, { relations: ['initiator', 'receiver'] });
   }
 
-  getByParticipants(initiatorId: string, receiverId: string): Promise<Friendship | undefined> {
+  async getByParticipants(
+    initiatorId: string,
+    receiverId: string,
+  ): Promise<Friendship | undefined> {
     return this.friendshipRepository.findOne({ initiatorId, receiverId });
   }
 
-  getFriendsListByUserId(userId: string): Promise<Friendship[]> {
+  async getFriendsListByUserId(userId: string): Promise<Friendship[]> {
     return this.friendshipRepository.find({
       where: [{ initiatorId: userId }, { receiverId: userId }],
       relations: ['initiator', 'receiver'],

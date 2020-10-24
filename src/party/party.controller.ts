@@ -1,15 +1,16 @@
 // prettier-ignore
 import {
+  BadRequestException,
   Body, Controller, ForbiddenException, Get, NotFoundException, Post,
 } from '@nestjs/common';
 import { Authorize, GetUser } from '../auth/auth.decorators';
 import Party from '../entity/Party';
 import Waypoint from '../entity/Waypoint';
-import AppGateway from '../gateway/app.gateway';
 import UserService from '../user/user.service';
 import User from '../entity/User';
 import PartyService from './party.service';
 import WaypointService from './waypoint.service';
+import PartyGateway from './party.gateway';
 
 @Authorize()
 @Controller('party')
@@ -20,7 +21,7 @@ class PartyController {
     private readonly waypointService: WaypointService,
     private readonly partyService: PartyService,
     private readonly userService: UserService,
-    private readonly appGateway: AppGateway,
+    private readonly partyGateway: PartyGateway,
   ) {}
 
   @Get('info')
@@ -68,13 +69,14 @@ class PartyController {
     const oldParty = await this.tryFindParty(partyUser.partyId);
     partyUser.partyId = partyId;
     await this.userService.update(partyUser);
-    this.appGateway.leaveParty(partyId, user.id);
-    this.appGateway.emitUserLeave(partyId, user.id);
+    this.partyGateway.leaveParty(oldParty.id, user.id);
+    this.partyGateway.emitUserLeave(oldParty.id, user.id);
     if (oldParty.users.length === 1) {
-      await this.partyService.delete(partyUser.partyId);
+      await this.waypointService.deleteByPartyId(oldParty.id);
+      await this.partyService.delete(oldParty.id);
     }
-    this.appGateway.joinParty(partyId, user.id);
-    this.appGateway.emitUserJoin(partyId, partyUser);
+    this.partyGateway.joinParty(partyId, user.id);
+    this.partyGateway.emitUserJoin(partyId, partyUser);
   }
 
   @Post('leave')
@@ -87,9 +89,10 @@ class PartyController {
     if (party.users.length === 1) {
       throw new ForbiddenException('You can not leave this party');
     }
-    await this.partyService.create(user);
-    this.appGateway.leaveParty(user.partyId, user.id);
-    this.appGateway.emitUserLeave(user.partyId, user.id);
+    const newParty = await this.partyService.create(user);
+    this.partyGateway.leaveParty(user.partyId, user.id);
+    this.partyGateway.emitUserLeave(user.partyId, user.id);
+    this.partyGateway.joinParty(newParty.id, user.id);
   }
 
   @Post('setRoute')
@@ -101,20 +104,32 @@ class PartyController {
     @Body('endPointLongitude') endPointLongitude: number,
     @Body('waypoints') waypoints: Waypoint[],
   ): Promise<void> {
-    const party = await this.partyService.getById(partyId);
+    if (!partyId) {
+      throw new BadRequestException('Party id is not specified');
+    }
+    const party = await this.partyService.getOnlyById(partyId);
     if (!party) {
-      throw new NotFoundException('This party does not exist');
+      throw new NotFoundException('Party is not found');
     }
     await this.waypointService.deleteByPartyId(partyId);
     // prettier-ignore
-    const createdWaypoints = waypoints.map((waypoint) => this.waypointService.create(waypoint));
-    await Promise.all(createdWaypoints);
+    const partyWaypoints = waypoints.map((partyWaypoint) => {
+      const waypoint = { ...partyWaypoint };
+      waypoint.partyId = partyId;
+      return waypoint;
+    });
+    // prettier-ignore
+    const waypointsForCreate = partyWaypoints.map(
+      (waypoint) => this.waypointService.create(waypoint),
+    );
+    const createdWaypoints = await Promise.all(waypointsForCreate);
     party.startPointLatitude = startPointLatitude;
     party.startPointLongitude = startPointLongitude;
     party.endPointLatitude = endPointLatitude;
     party.endPointLongitude = endPointLongitude;
-    party.waypoints = waypoints;
     await this.partyService.update(party);
+    party.waypoints = createdWaypoints;
+    this.partyGateway.emitNewRoute(partyId, party);
   }
 
   private async tryFindParty(partyId: string): Promise<Party> {

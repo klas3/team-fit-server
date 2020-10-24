@@ -17,7 +17,11 @@ class PartyService {
   }
 
   async getById(id: string): Promise<Party | undefined> {
-    return this.partyRepository.findOne({ id }, { relations: ['users'] });
+    return this.partyRepository.findOne({ id }, { relations: ['users', 'waypoints'] });
+  }
+
+  async getOnlyById(id: string): Promise<Party | undefined> {
+    return this.partyRepository.findOne({ id });
   }
 
   async update(party: Party): Promise<void> {
