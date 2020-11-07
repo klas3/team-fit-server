@@ -32,10 +32,11 @@ class EmailService {
   }
 
   private getHtml(username: string, message: string): string {
-    let html = fs.readFileSync('./shared/email-recovery-code-template.html', { encoding: 'utf8' });
+    let html = fs.readFileSync('./shared/password-recovery.html', { encoding: 'utf8' });
     html = html
       .replace('{username}', username)
-      .replace('{message}', message);
+      .replace('{message}', message)
+      .replace('{server-url}', process.env.SERVER_URL as string);
     return html;
   }
 }

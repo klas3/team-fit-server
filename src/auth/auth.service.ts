@@ -47,7 +47,7 @@ class AuthService {
     const resetCode = this.generateResetCode();
     user.setResetCode(resetCode);
     await this.userService.update(user);
-    await this.emailService.sendEmailAsync(user.email, 'Відновлення паролю', user.login, resetCode);
+    await this.emailService.sendEmailAsync(user.email, 'Password recovery', user.login, resetCode);
   }
 
   async resetPassword(newPassword: string, user: User): Promise<void> {

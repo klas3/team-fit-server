@@ -75,7 +75,7 @@ class AuthController {
     }
     const user = await this.userService.getByEmail(email);
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundException('User with this email was not found');
     }
     return this.authService.requestResetPassword(user);
   }
