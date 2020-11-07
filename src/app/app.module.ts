@@ -19,7 +19,7 @@ import UserModule from '../user/user.module';
       port: 3306,
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: 'team-fit',
+      database: process.env.DB_NAME,
       synchronize: true,
       logging: false,
       entities: ['dist/entity/**/*.js'],
