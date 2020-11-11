@@ -31,7 +31,6 @@ class AuthService {
 
   async login(user: User): Promise<string> {
     const payload = {
-      id: user.id,
       login: user.login,
       password: user.password,
     };
