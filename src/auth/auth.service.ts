@@ -24,7 +24,7 @@ class AuthService {
 
   async register(user: User): Promise<User> {
     const newUser = user;
-    newUser.markerColor = MarkerColor.black;
+    newUser.markerColor = MarkerColor.red;
     newUser.password = await bcrypt.hash(newUser.password, this.hashRounds);
     return this.userService.create(newUser);
   }
